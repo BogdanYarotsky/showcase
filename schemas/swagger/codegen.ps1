@@ -1,0 +1,1 @@
+nswag openapi2cscontroller /input:schemas/swagger/reference/api.yaml /output:api/Showcase.API/Generated/Controller.g.cs /Namespace:Showcase.API.Generated
