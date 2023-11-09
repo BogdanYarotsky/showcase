@@ -1,12 +1,13 @@
 openapi: 3.0.1
 info:
-  title: 'Showcase.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'
-  version: '1.0'
+  title: Hello
+  description: World
+  version: '1'
 paths:
   /weatherforecast:
     get:
       tags:
-        - 'Showcase.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'
+        - Weather
       operationId: GetWeatherForecast
       responses:
         '200':

@@ -1,9 +1,21 @@
+using Microsoft.OpenApi.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddCors();
+
+builder.Services.AddSingleton<DateTimeNowFunc>(() => DateTime.Now);
+builder.Services.AddScoped<WeatherForecastHandler>();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(gen =>
+{
+    gen.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Hello",
+        Description = "World",
+        Version = "1"
+    });
+});
 
 var app = builder.Build();
 
@@ -16,27 +28,48 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.UseCors(policy => policy
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
+app.MapGet("/weatherforecast", (WeatherForecastHandler h) => h.GetWeatherForecast())
 .WithName("GetWeatherForecast")
+.WithTags("Weather")
 .WithOpenApi();
 
 app.Run();
+
+
+delegate DateTime DateTimeNowFunc();
+
+class WeatherForecastHandler
+{
+    private readonly DateTimeNowFunc _dateTimeNowFunc;
+
+    public WeatherForecastHandler(DateTimeNowFunc dateTimeNowFunc)
+    {
+        _dateTimeNowFunc = dateTimeNowFunc;
+    }
+
+    public WeatherForecast[]? GetWeatherForecast()
+    {
+        var summaries = new[] {
+            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+        };
+
+        var now = _dateTimeNowFunc();
+        var forecast = Enumerable.Range(1, 5).Select(i =>
+            new WeatherForecast
+            (
+                DateOnly.FromDateTime(now.AddDays(i)),
+                Random.Shared.Next(-20, 55),
+                summaries[Random.Shared.Next(summaries.Length)]
+            ))
+        .ToArray();
+        return forecast;
+    }
+}
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
